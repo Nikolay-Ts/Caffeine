@@ -12,12 +12,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.math.max
 
 object Lock {
 
-    suspend fun lock(context: Context) {
+    suspend fun lock(context: Context, time: Int) {
         mutex.withLock {
+            maxTimeSeconds.value = time*60
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
             wakeLock = powerManager.newWakeLock(
                 PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
@@ -40,10 +40,15 @@ object Lock {
         maxTimeSeconds.value = timerSeconds
     }
 
+    fun toggleSleepOnLock() {
+        sleepOnLock.value = !sleepOnLock.value
+    }
+
 
 
     var onTimeSeconds = MutableStateFlow(0)
-    var maxTimeSeconds = MutableStateFlow(60*60) // max would be 60 minutes
+    var maxTimeSeconds = MutableStateFlow(30) // max would be 60 minutes
+    var sleepOnLock = MutableStateFlow(false)
 
     private var wakeLock: WakeLock? = null
     private var LOCK_LABEL: String = "Caffeine::ScreenLock"
@@ -55,7 +60,7 @@ object Lock {
 
 class ScreenOffReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent?.action == Intent.ACTION_SCREEN_OFF) {
+        if (intent?.action == Intent.ACTION_SCREEN_OFF && Lock.sleepOnLock.value == true) {
             CoroutineScope(Dispatchers.Main).launch {
                 Lock.unlock()
             }
