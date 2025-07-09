@@ -10,6 +10,7 @@ import androidx.compose.animation.slideIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,8 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -78,8 +82,9 @@ fun Greeting() {
     val maxTimeSeconds = Lock.maxTimeSeconds.collectAsStateWithLifecycle()
     val turnOfOnLock   = Lock.sleepOnLock.collectAsStateWithLifecycle()
     val customMaxTimeSeconds = remember { mutableIntStateOf(maxTimeSeconds.value) }
+    val countdownTime =  remember { mutableIntStateOf(customMaxTimeSeconds.intValue * 60) }
+
     val viewWidth = configuration.screenWidthDp*0.80
-    val countdownTime = remember { mutableIntStateOf(customMaxTimeSeconds.intValue * 60) }
 
 
     DisposableEffect(lifecycleOwner, context) {
@@ -120,15 +125,30 @@ fun Greeting() {
             Modifier
                 .fillMaxSize()
                 .width(viewWidth.dp)
-                .padding(horizontal = 5.dp),
-        verticalArrangement = Arrangement.Center,
+                .padding(horizontal = 5.dp)
+                .padding(bottom = (configuration.screenWidthDp*0.1).dp),
+        verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = convertMinutesToMMSS(countdownTime.intValue),
+            fontWeight = FontWeight.Bold,
+            fontSize = 50.sp,
+            textAlign = TextAlign.Center,
             modifier =
                 Modifier
-                    .size(50.dp)
+                    .width(viewWidth.dp)
+                    .align(Alignment.CenterHorizontally)
+        )
+
+        Spacer(
+            modifier =
+                Modifier
+                    .padding(vertical = 100.dp)
+                    .weight(
+                        0.5F,
+                        fill = false
+                    )
         )
 
         Slider(
@@ -170,8 +190,6 @@ fun Greeting() {
             )
         }
 
-
-
         Button(
             onClick = {
                 Lock.setMaxTimer(customMaxTimeSeconds.intValue*60)
@@ -181,11 +199,14 @@ fun Greeting() {
                         false -> Lock.lock(context, customMaxTimeSeconds.intValue)
                     }
                 }
-            }
+            },
+            modifier =
+                Modifier
+                    .padding(bottom = 50.dp)
         ) {
           when (isScreenOn.value) {
-              true ->  Text("The Lock is ON")
-              false -> Text("The Lock is OFF")
+              true ->  Text("Decaf")
+              false -> Text("Caffeinate")
           }
         }
     }
