@@ -7,15 +7,13 @@ import android.os.PowerManager.WakeLock
 import android.os.PowerManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-object Lock {
-
-    suspend fun lock(context: Context, time: Int) {
+object Caffeine {
+    suspend fun caffeinate(context: Context, time: Int) {
         mutex.withLock {
             maxTimeSeconds.value = time*60
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -29,7 +27,7 @@ object Lock {
         }
     }
 
-    suspend fun unlock() {
+    suspend fun decaf() {
         mutex.withLock {
             wakeLock?.release()
             isScreenOn.value = false
@@ -44,9 +42,6 @@ object Lock {
         sleepOnLock.value = !sleepOnLock.value
     }
 
-
-
-    var onTimeSeconds = MutableStateFlow(0)
     var maxTimeSeconds = MutableStateFlow(30) // max would be 60 minutes
     var sleepOnLock = MutableStateFlow(false)
 
@@ -60,9 +55,9 @@ object Lock {
 
 class ScreenOffReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent?.action == Intent.ACTION_SCREEN_OFF && Lock.sleepOnLock.value == true) {
+        if (intent?.action == Intent.ACTION_SCREEN_OFF && Caffeine.sleepOnLock.value == true) {
             CoroutineScope(Dispatchers.Main).launch {
-                Lock.unlock()
+                Caffeine.decaf()
             }
         }
     }
