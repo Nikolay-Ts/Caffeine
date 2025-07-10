@@ -17,6 +17,13 @@ object Caffeine {
         mutex.withLock {
             maxTimeSeconds.value = time*60
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+
+            if (powerManager.isPowerSaveMode) {
+                alert(context, "cannot caffeinate when in power saving mode")
+                vibrateDevice(context)
+                return
+            }
+
             wakeLock = powerManager.newWakeLock(
                 PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
                 LOCK_LABEL
